@@ -31,7 +31,9 @@ class Securewatch ( Endpoint ):
         self._platform = {  'WV01' : 'WorldView-01', 
                             'GE01' : 'GeoEye-01', 
                             'WV02' : 'WorldView-02', 
-                            'WV03_VNIR' : 'WorldView-03', 
+                            'WV03_VNIR' : 'WorldView-03',
+                            'WV03_SWIR': 'WorldView-03',
+			    'QB02': 'Quickbird',
                             'WV04' : 'WorldView-04' } 
 
         return

@@ -1,5 +1,5 @@
 import os
-import ogr
+from osgeo import ogr
 import json
 import pandas as pd
 import geopandas as gpd
