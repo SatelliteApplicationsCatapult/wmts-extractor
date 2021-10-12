@@ -15,7 +15,7 @@ def valid_date_time_argument(arg):
         # attempt to parse arg string into datetime obj
         return datetime.strptime(arg, "%d/%m/%Y %H:%M:%S")
     except ValueError:
-        msg = "Argument ({0}) not valid! Expected format, YYYY-MM-DD HH:MM:SS!".format(arg)
+        msg = "Argument ({0}) not valid! Expected format, DD/MM/YYYY HH:MM:SS!".format(arg)
         raise argparse.ArgumentTypeError(msg)
 
 
@@ -68,8 +68,6 @@ def main():
     # extract tiles coincident with point geometries
     obj = Extractor(config, args)
     obj.process(config, args)
-
-    return
 
 
 # execute main

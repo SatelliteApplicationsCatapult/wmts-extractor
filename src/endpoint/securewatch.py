@@ -5,8 +5,8 @@ from datetime import datetime
 import geopandas as gpd
 import pandas as pd
 import xmltodict
-from base import Endpoint
-from wfs import WfsCatalog
+from .base import Endpoint
+from .wfs import WfsCatalog
 from shapely.geometry import Polygon
 
 
@@ -45,13 +45,13 @@ class SecureWatch(Endpoint):
 
         # get metadata of features (rasters) intersecting aoi
         with tempfile.TemporaryDirectory() as tmp_path:
-            features = self._catalog.getFeatures(aoi.bounds, tmp_path)
+            features = self._catalog.get_features(aoi.bounds, tmp_path)
 
         # for each meta record
         records = []
         for feature in features:
             # create and append feature record
-            footprint = self.getFootprint(feature)
+            footprint = self.get_footprint(feature)
             records.append({'platform': self._platform[feature['DigitalGlobe:source']],
                             'uid': feature['DigitalGlobe:featureId'],
                             'product': feature['DigitalGlobe:productType'],
@@ -59,7 +59,7 @@ class SecureWatch(Endpoint):
                                                               '%Y-%m-%d %H:%M:%S'),
                             'cloud_cover': float(
                                 feature['DigitalGlobe:cloudCover']) if 'DigitalGlobe:cloudCover' in feature else None,
-                            'resolution': self.getResolution(feature),
+                            'resolution': self.get_resolution(feature),
                             'geometry': footprint,
                             'overlap': (aoi.intersection(footprint).area / aoi.area) * 100})
 
@@ -194,12 +194,12 @@ class Catalog(WfsCatalog):
         try:
 
             # download feature meta data file 
-            self.downloadFeatures(uri, os.path.join(out_path, 'features.xml'))
+            self.download_features(uri, os.path.join(out_path, 'features.xml'))
             with open(os.path.join(out_path, 'features.xml')) as fd:
                 doc = xmltodict.parse(fd.read())
 
                 # extract and record feature schemas 
-                schemas = self.findItems(doc, 'DigitalGlobe:FinishedFeature')
+                schemas = self.find_items(doc, 'DigitalGlobe:FinishedFeature')
                 for schema in schemas[0]:
                     # filter out non-EO datasets / SAR datasets
                     if schema['DigitalGlobe:sourceUnit'] not in self._blacklist['unit'] and \

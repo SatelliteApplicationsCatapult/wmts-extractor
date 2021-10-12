@@ -6,6 +6,16 @@ from aoi import Aoi
 from downloader import Downloader
 from osgeo import ogr
 
+from endpoint.mapserver import MapServer
+from endpoint.sentinelhub import SentinelHub
+from endpoint.securewatch import SecureWatch
+
+endpoint_class = {
+    "mapserver": MapServer,
+    "sentinelhub": SentinelHub,
+    "securewatch": SecureWatch
+}
+
 
 class Extractor:
 
@@ -15,8 +25,8 @@ class Extractor:
         constructor
         """
 
-        # create endpoint 
-        _class = globals()[str(config.endpoint.name).capitalize()]
+        # create endpoint
+        _class = endpoint_class[config.endpoint.name]
 
         self._endpoint = _class(config.endpoint, args)
         self._downloader = Downloader(config.endpoint)

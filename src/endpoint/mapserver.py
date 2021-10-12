@@ -2,7 +2,7 @@ import os
 
 import geopandas as gpd
 import pandas as pd
-from base import Endpoint
+from .base import Endpoint
 
 
 class MapServer(Endpoint):

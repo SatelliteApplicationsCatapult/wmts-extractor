@@ -5,8 +5,8 @@ from datetime import datetime
 import geopandas as gpd
 import pyproj
 import xmltodict
-from base import Endpoint
-from wfs import WfsCatalog
+from .base import Endpoint
+from .wfs import WfsCatalog
 from shapely.geometry import Polygon
 
 
