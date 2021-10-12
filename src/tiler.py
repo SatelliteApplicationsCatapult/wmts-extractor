@@ -1,7 +1,7 @@
 import math
 
-class MercatorTiler(object):
 
+class MercatorTiler(object):
     """
     TMS Global Mercator Profile
     ---------------------------
@@ -100,7 +100,7 @@ class MercatorTiler(object):
     """
 
     def __init__(self, tileSize=256):
-        "Initialize the TMS Global Mercator pyramid"
+        """Initialize the TMS Global Mercator pyramid"""
         self._tileSize = tileSize
         self._initialResolution = 2 * math.pi * 6378137 / self._tileSize
         # 156543.03392804062 for tileSize 256 pixels
@@ -110,117 +110,119 @@ class MercatorTiler(object):
         self._proj = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs'
         return
 
-    def LatLonToMeters(self, lat, lon ):
-        "Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"
+    def lat_lon_to_meters(self, lat, lon):
+        """Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"""
 
         mx = lon * self._originShift / 180.0
-        my = math.log( math.tan((90 + lat) * math.pi / 360.0 )) / (math.pi / 180.0)
+        my = math.log(math.tan((90 + lat) * math.pi / 360.0)) / (math.pi / 180.0)
 
         my = my * self._originShift / 180.0
         return mx, my
 
-    def MetersToLatLon(self, mx, my ):
-        "Converts XY point from Spherical Mercator EPSG:900913 to lat/lon in WGS84 Datum"
+    def meters_to_lat_lon(self, mx, my):
+        """Converts XY point from Spherical Mercator EPSG:900913 to lat/lon in WGS84 Datum"""
 
         lon = (mx / self._originShift) * 180.0
         lat = (my / self._originShift) * 180.0
 
-        lat = 180 / math.pi * (2 * math.atan( math.exp( lat * math.pi / 180.0)) - math.pi / 2.0)
+        lat = 180 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2.0)
         return lat, lon
 
-    def PixelsToMeters(self, px, py, zoom):
-        "Converts pixel coordinates in given zoom level of pyramid to EPSG:900913"
+    def pixels_to_meters(self, px, py, zoom):
+        """Converts pixel coordinates in given zoom level of pyramid to EPSG:900913"""
 
-        res = self.Resolution( zoom )
+        res = self.Resolution(zoom)
         mx = px * res - self._originShift
         my = py * res - self._originShift
         return mx, my
-        
-    def MetersToPixels(self, mx, my, zoom):
-        "Converts EPSG:900913 to pyramid pixel coordinates in given zoom level"
-                
-        res = self.Resolution( zoom )
+
+    def meters_to_pixels(self, mx, my, zoom):
+        """Converts EPSG:900913 to pyramid pixel coordinates in given zoom level"""
+
+        res = self.Resolution(zoom)
         px = (mx + self._originShift) / res
         py = (my + self._originShift) / res
         return px, py
-    
-    def PixelsToTile(self, px, py):
-        "Returns a tile covering region in given pixel coordinates"
 
-        tx = int( math.ceil( px / float(self._tileSize) ) - 1 )
-        ty = int( math.ceil( py / float(self._tileSize) ) - 1 )
+    def pixels_to_tile(self, px, py):
+        """Returns a tile covering region in given pixel coordinates"""
+
+        tx = int(math.ceil(px / float(self._tileSize)) - 1)
+        ty = int(math.ceil(py / float(self._tileSize)) - 1)
         return tx, ty
 
-    def PixelsToRaster(self, px, py, zoom):
-        "Move the origin of pixel coordinates to top-left corner"
-        
-        mapSize = self._tileSize << zoom
-        return px, mapSize - py
-        
-    def MetersToTile(self, mx, my, zoom):
-        "Returns tile for given mercator coordinates"
-        
-        px, py = self.MetersToPixels( mx, my, zoom)
-        return self.PixelsToTile( px, py)
+    def pixels_to_raster(self, px, py, zoom):
+        """Move the origin of pixel coordinates to top-left corner"""
 
-    def TileBounds(self, tx, ty, zoom):
-        "Returns bounds of the given tile in EPSG:900913 coordinates"
-        
-        minx, miny = self.PixelsToMeters( tx*self._tileSize, ty*self._tileSize, zoom )
-        maxx, maxy = self.PixelsToMeters( (tx+1)*self._tileSize, (ty+1)*self._tileSize, zoom )
-        return ( miny, minx, maxy, maxx )
+        map_size = self._tileSize << zoom
+        return px, map_size - py
 
-    def TileLatLonBounds(self, tx, ty, zoom ):
+    def meters_to_tile(self, mx, my, zoom):
+        """Returns tile for given mercator coordinates"""
+
+        px, py = self.meters_to_pixels(mx, my, zoom)
+        return self.pixels_to_tile(px, py)
+
+    def tile_bounds(self, tx, ty, zoom):
+        """Returns bounds of the given tile in EPSG:900913 coordinates"""
+
+        min_x, min_y = self.pixels_to_meters(tx * self._tileSize, ty * self._tileSize, zoom)
+        max_x, max_y = self.pixels_to_meters((tx + 1) * self._tileSize, (ty + 1) * self._tileSize, zoom)
+        return min_y, min_x, max_y, max_x
+
+    def tile_lat_lon_bounds(self, tx, ty, zoom):
         "Returns bounds of the given tile in latutude/longitude using WGS84 datum"
 
-        bounds = self.TileBounds( tx, ty, zoom)
-        minLat, minLon = self.MetersToLatLon(bounds[0], bounds[1])
-        maxLat, maxLon = self.MetersToLatLon(bounds[2], bounds[3])
-         
-        return ( minLat, minLon, maxLat, maxLon )
-        
-    def Resolution(self, zoom ):
+        bounds = self.tile_bounds(tx, ty, zoom)
+        minLat, minLon = self.meters_to_lat_lon(bounds[0], bounds[1])
+        maxLat, maxLon = self.meters_to_lat_lon(bounds[2], bounds[3])
+
+        return (minLat, minLon, maxLat, maxLon)
+
+    def Resolution(self, zoom):
         "Resolution (meters/pixel) for given zoom level (measured at Equator)"
-        
+
         # return (2 * math.pi * 6378137) / (self.tileSize * 2**zoom)
-        return self._initialResolution / (2**zoom)
-        
-    def ZoomForPixelSize(self, pixelSize ):
-        "Maximal scaledown zoom of the pyramid closest to the pixelSize."
-        
+        return self._initialResolution / (2 ** zoom)
+
+    def ZoomForPixelSize(self, pixelSize):
+        """Maximal scaledown zoom of the pyramid closest to the pixelSize."""
+
         for i in range(30):
             if pixelSize > self.Resolution(i):
-                return i-1 if i!=0 else 0 # We don't want to scale up
+                return i - 1 if i != 0 else 0  # We don't want to scale up
 
-    def GoogleTile(self, tx, ty, zoom):
-        "Converts TMS tile coordinates to Google Tile coordinates"
-        
+    def google_tile(self, tx, ty, zoom):
+        """Converts TMS tile coordinates to Google Tile coordinates"""
+
         # coordinate origin is moved from bottom-left to top-left corner of the extent
-        return tx, (2**zoom - 1) - ty
+        return tx, (2 ** zoom - 1) - ty
 
-    def QuadTree(self, tx, ty, zoom ):
-        "Converts TMS tile coordinates to Microsoft QuadTree"
-        
-        quadKey = ""
-        ty = (2**zoom - 1) - ty
+    def quad_tree(self, tx, ty, zoom):
+        """Converts TMS tile coordinates to Microsoft QuadTree"""
+
+        quad_key = ""
+        ty = (2 ** zoom - 1) - ty
         for i in range(zoom, 0, -1):
             digit = 0
-            mask = 1 << (i-1)
+            mask = 1 << (i - 1)
             if (tx & mask) != 0:
                 digit += 1
             if (ty & mask) != 0:
                 digit += 2
-            quadKey += str(digit)
-            
-        return quadKey
+            quad_key += str(digit)
 
-    def LatLonToTile( self, lat, lon, z ):
-        "Converts latlon to mercator tile coordinates"
+        return quad_key
 
-        mx, my = self.LatLonToMeters( lat, lon )
-        return self.MetersToTile( mx, my, z ) 
-        
-#-------------------------------------------------------
+    def lat_lon_to_tile(self, lat, lon, z):
+        """Converts latlon to mercator tile coordinates"""
+
+        mx, my = self.lat_lon_to_meters(lat, lon)
+        return self.meters_to_tile(mx, my, z)
+
+    # -------------------------------------------------------
+
+
 # Translates between lat/long and the slippy-map tile
 # numbering scheme
 # 
@@ -228,76 +230,75 @@ class MercatorTiler(object):
 # 
 # Written by Oliver White, 2007
 # This file is public-domain
-#-------------------------------------------------------
+# -------------------------------------------------------
 class SlippyTiler:
 
-    def __init__( self, tileSize=256 ):
-        self._tileSize=tileSize
-        self._proj='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+    def __init__(self, tile_size=256):
+        self._tileSize = tile_size
+        self._proj = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
         return
 
-    def numTiles( self, z ):
-        return( math.pow(2,z) )
+    def num_tiles(self, z):
+        return math.pow(2, z)
 
-    def sec( self, x ):
-        return( 1.0 / math.cos(x) )
+    def sec(self, x):
+        return 1.0 / math.cos(x)
 
-    def LatLonToRelativeXY( self, lat, lon ):
-        x = ( lon + 180.0 ) / 360.0
+    def lat_lon_to_relative_xy(self, lat, lon):
+        x = (lon + 180.0) / 360.0
         y = (1.0 - math.log(math.tan(math.radians(lat)) + self.sec(math.radians(lat))) / math.pi) / 2.0
-        return(x,y)
+        return x, y
 
-    def LatLonToXY( self, lat, lon, z ):
-        n = self.numTiles(z)
-        x,y = self.LatLonToRelativeXY(lat,lon)
-        return(n*x, n*y)
-    
-    def LatLonToTile( self, lat, lon, z):
-        x,y = self.LatLonToXY(lat,lon,z)
-        return(int(x),int(y))
+    def lat_lon_to_xy(self, lat, lon, z):
+        n = self.num_tiles(z)
+        x, y = self.lat_lon_to_relative_xy(lat, lon)
+        return n * x, n * y
 
-    def XYToLatLon( self, x, y, z ):
-        n = self.numTiles(z)
-        relY = y / n
-        lat =  self.MercatorToLat(math.pi * (1 - 2 * relY))
+    def lat_lon_to_tile(self, lat, lon, z):
+        x, y = self.lat_lon_to_xy(lat, lon, z)
+        return int(x), int(y)
+
+    def xy_to_lat_lon(self, x, y, z):
+        n = self.num_tiles(z)
+        rel_y = y / n
+        lat = self.mercator_to_lat(math.pi * (1 - 2 * rel_y))
         lon = -180.0 + 360.0 * x / n
-        return(lat,lon)
-    
-    def LatBounds(self, y, z ):
-        n = self.numTiles(z)
-        unit = 1 / n
-        relY1 = y * unit
-        relY2 = relY1 + unit
-        lat1 = self.MercatorToLat(math.pi * (1 - 2 * relY1))
-        lat2 = self.MercatorToLat(math.pi * (1 - 2 * relY2))
-        return( lat1, lat2 )
+        return lat, lon
 
-    def LonBounds( self, x, z ):
-        n = self.numTiles(z)
+    def lat_bounds(self, y, z):
+        n = self.num_tiles(z)
+        unit = 1 / n
+        rel_y1 = y * unit
+        rel_y2 = rel_y1 + unit
+        lat1 = self.mercator_to_lat(math.pi * (1 - 2 * rel_y1))
+        lat2 = self.mercator_to_lat(math.pi * (1 - 2 * rel_y2))
+        return lat1, lat2
+
+    def lon_bounds(self, x, z):
+        n = self.num_tiles(z)
         unit = 360 / n
         lon1 = -180 + x * unit
         lon2 = lon1 + unit
-        return(lon1,lon2)
-    
-    def TileBounds( self, x, y, z ):
-        lat1,lat2 = self.LatBounds(y,z)
-        lon1,lon2 = self.LonBounds(x,z)
-        return( (lat2, lon1, lat1, lon2) ) # S,W,N,E
+        return lon1, lon2
 
-    def MercatorToLat(self, mercatorY):
-        return(math.degrees(math.atan(math.sinh(mercatorY))))
+    def tile_bounds(self, x, y, z):
+        lat1, lat2 = self.lat_bounds(y, z)
+        lon1, lon2 = self.lon_bounds(x, z)
+        return lat2, lon1, lat1, lon2  # S,W,N,E
+
+    def mercator_to_lat(self, mercatorY):
+        return math.degrees(math.atan(math.sinh(mercatorY)))
 
 
 if __name__ == "__main__":
     obj = SlippyTiler()
-    for z in range(0,22):
-        #x,y = obj.LatLonToTile(51.50610, -0.119888, z)
-        x,y = obj.LatLonToTile( 15.5527, 48.5164, z)
-        x,y = obj.LatLonToTile( 12.75108333, 44.89085, z )
+    for z in range(0, 22):
+        # x,y = obj.LatLonToTile(51.50610, -0.119888, z)
+        x, y = obj.lat_lon_to_tile(15.5527, 48.5164, z)
+        x, y = obj.lat_lon_to_tile(12.75108333, 44.89085, z)
 
-        x,y = obj.LatLonToTile( 12.749273988762466, 44.88900829538637, z )
-        x,y = obj.LatLonToTile( 12.76757362, 44.8908577, z )
+        x, y = obj.lat_lon_to_tile(12.749273988762466, 44.88900829538637, z)
+        x, y = obj.lat_lon_to_tile(12.76757362, 44.8908577, z)
 
-        s,w,n,e = obj.TileBounds(x,y,z)
-        print ( "%d: %d,%d --> %1.3f :: %1.3f, %1.3f :: %1.3f" % (z,x,y,s,n,w,e) )
-
+        s, w, n, e = obj.tile_bounds(x, y, z)
+        print("%d: %d,%d --> %1.3f :: %1.3f, %1.3f :: %1.3f" % (z, x, y, s, n, w, e))

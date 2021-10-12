@@ -1,10 +1,9 @@
-
 import abc
+
 
 class Endpoint:
 
-    def __init__( self, config, args ):
-    
+    def __init__(self, config, args):
         """
         base class constructor
         """
@@ -12,20 +11,19 @@ class Endpoint:
         # copy args
         self._config = config
         self._args = args
-        
-        return
 
     @abc.abstractmethod
-    def getInventory( self ):
-        pass
+    def get_inventory(self, aoi):
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def getUri( self, record ):
-        pass
+    def get_uri(self, record):
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def getPathname( self, record, aoi ):
-        pass
+    def get_pathname(self, record, aoi):
+        raise NotImplementedError
 
-    def filterInventory( self, inventory ):
-        return inventory
+    @abc.abstractmethod
+    def filter_inventory(self, inventory):
+        raise NotImplementedError

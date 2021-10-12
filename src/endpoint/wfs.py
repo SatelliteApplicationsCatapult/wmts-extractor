@@ -1,13 +1,13 @@
 import os
-import pycurl
+
 import certifi
-import xmltodict
+import pycurl
 
 
-class WfsCatalog():
+class WfsCatalog:
 
-    def __init__( self, config ):
-    
+    def __init__(self, config):
+
         """
         constructor
         """
@@ -16,8 +16,7 @@ class WfsCatalog():
         self._credentials = config.credentials if 'credentials' in config else None
         return
 
-
-    def downloadFeatures( self, uri, out_pathname ):
+    def download_features(self, uri, out_pathname):
 
         """
         download feature info xml file
@@ -26,18 +25,18 @@ class WfsCatalog():
         # setup curl object - include ssl certificates
         curl = pycurl.Curl()
         curl.setopt(pycurl.CAINFO, certifi.where())
-        curl.setopt(pycurl.URL, uri )
+        curl.setopt(pycurl.URL, uri)
 
         # config authentication
         if self._credentials is not None:
-            curl.setopt( pycurl.USERPWD, "{}:{}".format( self._credentials.username, self._credentials.password ) )
+            curl.setopt(pycurl.USERPWD, "{}:{}".format(self._credentials.username, self._credentials.password))
 
         # create output path
-        if not os.path.exists( os.path.dirname ( out_pathname ) ):
-            os.makedirs( os.path.dirname ( out_pathname ) )
+        if not os.path.exists(os.path.dirname(out_pathname)):
+            os.makedirs(os.path.dirname(out_pathname))
 
         # write binary data to file
-        fp = open( out_pathname, "wb" )
+        fp = open(out_pathname, "wb")
         curl.setopt(pycurl.WRITEDATA, fp)
         curl.perform()
 
@@ -47,7 +46,7 @@ class WfsCatalog():
 
         return
 
-    def getItem( self, root, field ):
+    def get_item(self, root, field):
 
         """              
         get node value from xml schema
@@ -56,14 +55,13 @@ class WfsCatalog():
         item = None
 
         # return first item in list else none
-        items = self.findItems( root, field )
-        if len( items ) > 0:
-            item = items[ 0 ]
+        items = self.findItems(root, field)
+        if len(items) > 0:
+            item = items[0]
 
         return item
 
-
-    def findItems( self, node, field ):
+    def find_items(self, node, field):
 
         """              
         recursively extract key values from dictionary
@@ -75,22 +73,22 @@ class WfsCatalog():
 
             # record value of key match
             if key == field:
-                values.append( value )
+                values.append(value)
 
             # recursive call on nested dict
-            elif isinstance( value, dict ):
-                results = self.findItems( value, field )
+            elif isinstance(value, dict):
+                results = self.find_items(value, field)
                 for result in results:
-                    values.append( result )
+                    values.append(result)
 
             # loop through contents in array
-            elif isinstance( value, list ):
+            elif isinstance(value, list):
                 for item in value:
 
                     # recursive call on nested dict
-                    if isinstance( item, dict ):
-                        results = self.findItems( item, field )
+                    if isinstance(item, dict):
+                        results = self.find_items(item, field)
                         for result in results:
-                            values.append( result )
+                            values.append(result)
 
-        return values        
+        return values
