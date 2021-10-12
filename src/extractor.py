@@ -51,12 +51,13 @@ class Extractor:
                 inventory = self._endpoint.get_inventory(aoi.geometry)
                 if inventory is not None:
 
+                    # apply filter constraints
+                    inventory = self.filter_inventory(inventory, args)
+
                     # print available scenes
                     self.print_inventory(f'Datasets collocated with AoI: {aoi.name}', inventory)
                     downloads = 0
 
-                    # apply filter constraints
-                    inventory = self.filter_inventory(inventory, args)
                     for record in inventory.itertuples():
 
                         # construct out pathname
@@ -166,6 +167,10 @@ class Extractor:
         if args.platforms is not None:
             inventory = inventory[(pd.isnull(inventory['platform'])) |
                                   (inventory['platform'].isin(args.platforms))]
+
+        if args.max_resolution is not None:
+            inventory = inventory[(pd.isnull(inventory['resolution'])) |
+                                  (inventory['resolution'] <= args.max_resolution)]
 
         # endpoint specific filtering
         return self._endpoint.filter_inventory(inventory)

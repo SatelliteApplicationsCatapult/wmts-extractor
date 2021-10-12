@@ -52,14 +52,14 @@ class SecureWatch(Endpoint):
         for feature in features:
             # create and append feature record
             footprint = self.get_footprint(feature)
-            records.append({'platform': self._platform[feature['DigitalGlobe:source']],
+            records.append({'platform': self._platform.get(feature['DigitalGlobe:source'], 'Unknown'),
                             'uid': feature['DigitalGlobe:featureId'],
                             'product': feature['DigitalGlobe:productType'],
                             'acq_datetime': datetime.strptime(feature['DigitalGlobe:acquisitionDate'],
                                                               '%Y-%m-%d %H:%M:%S'),
                             'cloud_cover': float(
                                 feature['DigitalGlobe:cloudCover']) if 'DigitalGlobe:cloudCover' in feature else None,
-                            'resolution': self.get_resolution(feature),
+                            'resolution': float(feature['DigitalGlobe:groundSampleDistance']),
                             'geometry': footprint,
                             'overlap': (aoi.intersection(footprint).area / aoi.area) * 100})
 
@@ -76,7 +76,7 @@ class SecureWatch(Endpoint):
             inventory = inventory[(pd.isnull(inventory['uid'])) |
                                   (inventory['uid'] in self._args.features)]
 
-        return inventory
+        return inventory.reset_index(drop=True)
 
     def get_uri(self, record):
 
@@ -120,16 +120,6 @@ class SecureWatch(Endpoint):
                                                                       uid=record.uid)
 
         return os.path.join(out_path, filename)
-
-    @staticmethod
-    def get_resolution(feature):
-
-        """
-        convert source string to spatial resolution
-        """
-
-        # map resolution string to source
-        return '0.31cm' if feature['DigitalGlobe:source'] in ['WV03_VNIR', 'WV04 '] else '0.46cm'
 
     @staticmethod
     def get_footprint(feature):
@@ -203,7 +193,7 @@ class Catalog(WfsCatalog):
                 for schema in schemas[0]:
                     # filter out non-EO datasets / SAR datasets
                     if schema['DigitalGlobe:sourceUnit'] not in self._blacklist['unit'] and \
-                       schema['DigitalGlobe:source'] not in self._blacklist['source']:
+                            schema['DigitalGlobe:source'] not in self._blacklist['source']:
                         features.append(schema)
 
         except Exception as e:
