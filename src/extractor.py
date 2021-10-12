@@ -31,8 +31,6 @@ class Extractor:
         self._endpoint = _class(config.endpoint, args)
         self._downloader = Downloader(config.endpoint)
 
-        return
-
     def process(self, config, args):
 
         """
@@ -70,13 +68,14 @@ class Extractor:
                             if not os.path.exists(os.path.dirname(out_pathname)):
                                 os.makedirs(os.path.dirname(out_pathname))
 
-                            # retrieve images aligned with constraints            
-                            print(f'downloading : {out_pathname}')
-                            self._downloader.process(self._endpoint.get_uri(record),
-                                                     aoi,
-                                                     args,
-                                                     out_pathname)
-                            print('... OK!')
+                            if not args.info_only:
+                                # retrieve images aligned with constraints
+                                print(f'downloading : {out_pathname}')
+                                self._downloader.process(self._endpoint.get_uri(record),
+                                                         aoi,
+                                                         args,
+                                                         out_pathname)
+                                print('... OK!')
 
                         else:
 
