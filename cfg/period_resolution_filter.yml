@@ -1,0 +1,37 @@
+number_images: 7
+resolutions:
+  - 0.3
+  - 0.4
+  - 0.5
+periods:
+  - name: Period 1
+    date_range:
+      - 1/1/2011
+      - 31/12/2014
+    weights:
+      - - 11
+        - 12
+        - 12
+      - - 21
+        - 22
+        - 23
+      - - 31
+        - 32
+        - 33
+  - name: Period 2
+    date_range:
+      - 31/1/2015
+      - 1/12/2018
+    weights:
+      - - 41
+        - 42
+        - 43
+      - - 51
+        - 52
+        - 53
+      - - 61
+        - 62
+        - 63
+      - - 71
+        - 72
+        - 73

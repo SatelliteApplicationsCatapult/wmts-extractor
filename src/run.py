@@ -13,6 +13,7 @@ def valid_date_time_argument(arg):
 
     try:
         # attempt to parse arg string into datetime obj
+        print(arg)
         return datetime.strptime(arg, "%d/%m/%Y %H:%M:%S")
     except ValueError:
         msg = "Argument ({0}) not valid! Expected format, DD/MM/YYYY HH:MM:SS!".format(arg)
@@ -43,6 +44,7 @@ def parse_arguments(args=None):
     parser.add_argument('-a', '--aois', nargs='+', help='aoi list', default=None)
     parser.add_argument('-p', '--platforms', nargs='+', help='platforms list', default=None)
     parser.add_argument('-r', '--max_resolution', type=float, help='max resolution in cm', default=None)
+    parser.add_argument('-pr', '--period_resolution', help='weight assigned to a pair time period/resolution by YML')
 
     parser.add_argument('--overwrite', action='store_true', help='overwrite existing files')
     parser.add_argument('--info_only', action='store_true', help='print available features only')

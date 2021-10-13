@@ -1,10 +1,12 @@
 import os
+import yaml
 
 import geopandas as gpd
 import pandas as pd
 from aoi import Aoi
 from downloader import Downloader
 from osgeo import ogr
+from munch import munchify
 
 from endpoint.mapserver import MapServer
 from endpoint.sentinelhub import SentinelHub
@@ -148,15 +150,74 @@ class Extractor:
         filter image inventory on user-defined conditions passed via command line
         """
 
-        # apply start datetime condition
-        if args.start_datetime is not None:
-            inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                  (inventory['acq_datetime'] >= args.start_datetime)]
+        if args.period_resolution:
 
-        # apply end datetime condition
-        if args.end_datetime is not None:
+            # load config parameters from file
+            with open(args.period_resolution, 'r') as f:
+                tr_file = munchify(yaml.safe_load(f))
+
+            number_images = tr_file.get('number_images')
+            periods = tr_file.get('periods')
+            resolution_indexes = [str(r) for r in tr_file.get('resolutions')]
+
+            start_period = periods[0].get('date_range')[0]
+            end_first_period = periods[0].get("date_range")[-1]
+            nweights_first_period = len(periods[0].get('weights'))
+            end_period = periods[-1].get('date_range')[-1]
+
+            # filter inventory by initial and end date
             inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                  (inventory['acq_datetime'] <= args.end_datetime)]
+                                  (inventory['acq_datetime'] >= start_period)]
+
+            inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
+                                  (inventory['acq_datetime'] <= end_period)]
+
+            date_index = pd.date_range(start=start_period, end=end_first_period, periods=nweights_first_period)
+            weights = periods[0].get('weights')
+
+            for p in periods[1:]:
+                date_index = date_index.union(pd.date_range(start=p.get("date_range")[0],
+                                                            end=p.get("date_range")[1],
+                                                            periods=len(p.get('weights'))))
+                weights += p.get('weights')
+
+            period_names = [p.get('name') for p in periods for i in range(0, len(p.get('weights')))]
+
+            tr_values = pd.DataFrame([[period_names[i]]+w for i, w in enumerate(weights)], index=date_index,
+                                     columns=['Period Name'] + resolution_indexes)
+
+            print("\n\t\tDecision Table")
+            print(tr_values)
+            print()
+
+            pr_weights = [tr_values.loc[tr_values.truncate(after=dt).index[-1], str(resolution)]
+                          if str(resolution) in resolution_indexes else 0
+                          for idx, dt, resolution in inventory[['acq_datetime', 'resolution']].itertuples()]
+
+            p_names = [tr_values.loc[tr_values.truncate(after=dt).index[-1], 'Period Name']
+                       if str(resolution) in resolution_indexes else 0
+                       for idx, dt, resolution in inventory[['acq_datetime', 'resolution']].itertuples()]
+
+            inventory['Weights'] = pr_weights
+            inventory['Period Name'] = p_names
+
+            inventory = inventory.sort_values(by='Weights', ascending=False).head(number_images)
+
+        else:
+
+            # apply start datetime condition
+            if args.start_datetime is not None:
+                inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
+                                      (inventory['acq_datetime'] >= args.start_datetime)]
+
+            # apply end datetime condition
+            if args.end_datetime is not None:
+                inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
+                                      (inventory['acq_datetime'] <= args.end_datetime)]
+
+            if args.max_resolution is not None:
+                inventory = inventory[(pd.isnull(inventory['resolution'])) |
+                                      (inventory['resolution'] <= args.max_resolution)]
 
         # apply max cloud coverage condition
         if args.max_cloud is not None:
@@ -167,10 +228,6 @@ class Extractor:
         if args.platforms is not None:
             inventory = inventory[(pd.isnull(inventory['platform'])) |
                                   (inventory['platform'].isin(args.platforms))]
-
-        if args.max_resolution is not None:
-            inventory = inventory[(pd.isnull(inventory['resolution'])) |
-                                  (inventory['resolution'] <= args.max_resolution)]
 
         # endpoint specific filtering
         return self._endpoint.filter_inventory(inventory)
