@@ -106,10 +106,12 @@ List of current command line options supported by the software application:
 - **-c, --max_cloud**: Max cloud cover in percentage - `example: 0.5`
 - **-f, --features**: Identify imagery for download by specifying list of space-separated, unique feature identifiers 
 defined in metadata
+- **-o, --overlap**: Minimum percentage overlap - `example: 80`
 - **-p, --platforms**: List of space-separated platforms - `example: WorldView-01 GeoEye-01`
 - **-r, --max_resolution**: Max resolution in meters - `example: 0.4`
 - **-pr, --period_resolution**: File location to [YML file](cfg/period_resolution_filter.yml) containing weights 
-assigned to a pair time period/resolution - `example: /cfg/period_resolution_filter.yml`
+assigned to a pair time period/resolution - `example: /cfg/period_resolution_filter.yml` 
+More info in the [Appendix](#appendix) section.
 - **--overwrite**: Overwrite existing output files – otherwise skip download
 - **--info_only**: Print table of metadata field values for imagery satisfying user-defined spatial and temporal 
 constraints
@@ -138,4 +140,83 @@ Retrieve metadata of available zoom level 17 imagery for 2019 and display on com
 
 ``` bash
 # wmts-extractor /cfg/securewatch.yml 17 /images -s "01/01/2019 00:00:00" -e "31/12/2019 23:59:59" --info_only
+```
+
+## Appendix
+
+### Period Resolution filter (-pr)
+
+This filter has been added to fill a recurrent use case where the user needs a filtered list of products under a complex
+criteria based on periods of time and resolution.
+
+To do this, we have to design a bi-dimensional table that relates a pair of `time periods` and `resolution` values by 
+what we call `weights`. An example of this table can be seen below:
+
+```
+            Period Name  0.3  0.4  0.5
+2011-01-01    Period 1    11   12   13
+2012-12-31    Period 1    21   22   23
+2014-12-31    Period 1    31   32   33
+2015-01-31    Period 2    41   42   43
+2016-01-25    Period 2    51   52   53
+2017-01-18    Period 2    61   62   63
+2018-01-12    Period 2    71   72   73
+```
+
+If we pay attention to the first row, we can deduce that for a time period between `2011-01-01` and `2011-01-01` for the
+given resolution values (0.3, 0.4 and 0.5) there are some weights assigned with values 11, 12 and 13.
+
+This table as well as the maximum number of images we want to obtain is given by a YML file that can be checked 
+[here](cfg/period_resolution_filter.yml).
+
+The result of this filter using the [example config file for securewatch](cfg/securewatch.yml):
+
+```bash
+# wmts-extractor /cfg/securewatch.yml 18 /images/ -pr /cfg/period_resolution_filter.yml --info_only
+
+                Decision Table
+           Period Name  0.3  0.4  0.5
+2011-01-01    Period 1   11   12   12
+2012-12-31    Period 1   21   22   23
+2014-12-31    Period 1   31   32   33
+2015-01-31    Period 1   41   42   43
+2016-01-25    Period 1   51   52   53
+2017-01-18    Period 1   61   62   63
+2018-01-12    Period 1   71   72   73
+
+Datasets collocated with AoI: aoi-0
+       platform                               uid                      product        acq_datetime  cloud_cover  resolution     overlap  Weights Period Name
+0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.000000  61       Period 1
+1  WorldView-02  4e1a9ad33e8e8867f3198b6cbb1906cf  Pan Sharpened Natural Color 2014-03-10 07:41:54  0.038534     0.5         100.000000  23       Period 1
+2  WorldView-03  66c9145994bd1dae337d05708f3c2c8c  Pan Sharpened Natural Color 2014-11-04 07:36:45  0.000000     0.3         50.113704   21       Period 1
+3  WorldView-03  9a93bbeb4991fa865fb083809cbf0e63  Pan Sharpened Natural Color 2014-10-21 07:16:16  0.011507     0.3         100.000000  21       Period 1
+4  GeoEye-01     f0a5b45e09f868a70e004337488674c7  Pan Sharpened Natural Color 2011-10-23 07:22:39  0.007486     0.4         100.000000  12       Period 1
+5  WorldView-02  1ffcacf3ebb20241b067a14b4ffd2786  Pan Sharpened Natural Color 2011-03-10 07:58:48  0.029268     0.4         100.000000  12       Period 1
+6  GeoEye-01     95603441945ef85d77d7075e6c806eed  Pan Sharpened Natural Color 2011-03-01 07:26:02  0.498521     0.4         100.000000  12       Period 1
+```
+
+**NOTE**: This filter can be used in addition to other filters such as minimum number for overlap (-o) and maximum
+number of cloud cover (-c), but will ignore any other related to time periods (-s, -e) or resolution (-r).
+
+```bash
+# wmts-extractor /cfg/securewatch.yml 18 /images/ -pr /cfg/period_resolution_filter.yml -o 90 -c 0.1 --info_only
+
+                Decision Table
+           Period Name  0.3  0.4  0.5
+2011-01-01    Period 1   11   12   12
+2012-12-31    Period 1   21   22   23
+2014-12-31    Period 1   31   32   33
+2015-01-31    Period 1   41   42   43
+2016-01-25    Period 1   51   52   53
+2017-01-18    Period 1   61   62   63
+2018-01-12    Period 1   71   72   73
+
+Datasets collocated with AoI: aoi-0
+       platform                               uid                      product        acq_datetime  cloud_cover  resolution  overlap  Weights Period Name
+0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.0    61       Period 1
+1  WorldView-02  4e1a9ad33e8e8867f3198b6cbb1906cf  Pan Sharpened Natural Color 2014-03-10 07:41:54  0.038534     0.5         100.0    23       Period 1
+2  WorldView-03  9a93bbeb4991fa865fb083809cbf0e63  Pan Sharpened Natural Color 2014-10-21 07:16:16  0.011507     0.3         100.0    21       Period 1
+3  GeoEye-01     f0a5b45e09f868a70e004337488674c7  Pan Sharpened Natural Color 2011-10-23 07:22:39  0.007486     0.4         100.0    12       Period 1
+4  WorldView-02  1ffcacf3ebb20241b067a14b4ffd2786  Pan Sharpened Natural Color 2011-03-10 07:58:48  0.029268     0.4         100.0    12       Period 1
+
 ```
