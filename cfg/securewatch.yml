@@ -1,9 +1,9 @@
 endpoint:
     name: securewatch
     credentials:
-        username: chris.williams@sa.catapult.org.uk
-        password: XXXXXX
-    id: XXXXXX
+        username: yolanda.vazquez@sa.catapult.org.uk
+        password:
+    id: 0f96fb54-cbb7-4191-afec-ea6372b311ab
     uri: https://securewatch.digitalglobe.com/earthservice/wmtsaccess
     type: slippy
     layer: DigitalGlobe:ImageryTileService
@@ -11,5 +11,5 @@ endpoint:
     tilematrixset: EPSG:3857
     profile: Currency_RGB_Profile 
 aoi:
-    pathname: 'C:\Users\Chris.Williams\Desktop\aois.shp'
+    pathname: /cfg/aoi/aoi_example.shp
     name: name
