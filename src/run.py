@@ -38,9 +38,9 @@ def parse_arguments(args=None):
                         default=None)
     parser.add_argument('-e', '--end_datetime', type=valid_date_time_argument, help='end  acquisition datetime',
                         default=None)
-    parser.add_argument('-c', '--max_cloud', type=int, help='max cloud cover (%)', default=20)
+    parser.add_argument('-c', '--max_cloud', type=float, help='max cloud cover', default=None)
     parser.add_argument('-f', '--features', nargs='+', help='feature id list', default=None)
-    parser.add_argument('-o', '--overlap', type=int, help='minimum percentage overlap ', default='10')
+    parser.add_argument('-o', '--overlap', type=int, help='minimum percentage overlap ', default=None)
     parser.add_argument('-a', '--aois', nargs='+', help='aoi list', default=None)
     parser.add_argument('-p', '--platforms', nargs='+', help='platforms list', default=None)
     parser.add_argument('-r', '--max_resolution', type=float, help='max resolution in cm', default=None)
