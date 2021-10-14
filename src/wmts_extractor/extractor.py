@@ -3,14 +3,14 @@ import yaml
 
 import geopandas as gpd
 import pandas as pd
-from aoi import Aoi
-from downloader import Downloader
+from .aoi import Aoi
+from .downloader import Downloader
 from osgeo import ogr
 from munch import munchify
 
-from endpoint.mapserver import MapServer
-from endpoint.sentinelhub import SentinelHub
-from endpoint.securewatch import SecureWatch
+from .endpoint.mapserver import MapServer
+from .endpoint.sentinelhub import SentinelHub
+from .endpoint.securewatch import SecureWatch
 
 endpoint_class = {
     "mapserver": MapServer,

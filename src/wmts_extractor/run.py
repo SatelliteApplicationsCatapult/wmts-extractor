@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime
 
 import yaml
-from extractor import Extractor
+from .extractor import Extractor
 from munch import munchify
 
 
@@ -43,7 +43,7 @@ def parse_arguments(args=None):
     parser.add_argument('-o', '--overlap', type=int, help='minimum percentage overlap ', default=None)
     parser.add_argument('-a', '--aois', nargs='+', help='aoi list', default=None)
     parser.add_argument('-p', '--platforms', nargs='+', help='platforms list', default=None)
-    parser.add_argument('-r', '--max_resolution', type=float, help='max resolution in cm', default=None)
+    parser.add_argument('-r', '--max_resolution', type=float, help='Max resolution in meters', default=None)
     parser.add_argument('-pr', '--period_resolution', help='weight assigned to a pair time period/resolution by YML')
 
     parser.add_argument('--overwrite', action='store_true', help='overwrite existing files')
@@ -56,7 +56,7 @@ def parse_arguments(args=None):
     return parser.parse_args(args)
 
 
-def main():
+def cli():
     """
     main path of execution
     """
@@ -73,6 +73,6 @@ def main():
     obj.process(config, args)
 
 
-# execute main
+# execute cli
 if __name__ == '__main__':
-    main()
+    cli()

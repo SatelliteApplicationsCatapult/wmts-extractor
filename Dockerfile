@@ -18,8 +18,9 @@ RUN apt-get -t unstable install -y libgdal-dev g++
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
 
-COPY requirements.txt /tmp/
 COPY src /src
 COPY cfg /cfg
 
-RUN pip install -r /tmp/requirements.txt
+RUN pip install -e /src/
+
+CMD ["bash"]
