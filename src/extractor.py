@@ -229,5 +229,10 @@ class Extractor:
             inventory = inventory[(pd.isnull(inventory['platform'])) |
                                   (inventory['platform'].isin(args.platforms))]
 
+        # apply min overlap condition
+        if args.overlap is not None:
+            inventory = inventory[(pd.isnull(inventory['overlap'])) |
+                                  (inventory['overlap'] >= args.overlap)]
+
         # endpoint specific filtering
         return self._endpoint.filter_inventory(inventory)
