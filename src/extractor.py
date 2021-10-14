@@ -58,20 +58,21 @@ class Extractor:
 
                     # print available scenes
                     self.print_inventory(f'Datasets collocated with AoI: {aoi.name}', inventory)
-                    downloads = 0
 
-                    for record in inventory.itertuples():
+                    # If --info_only flag is enabled the download process won't start
+                    if not args.info_only:
 
-                        # construct out pathname
-                        out_pathname = os.path.join(root_path, self._endpoint.get_pathname(record, aoi))
+                        downloads = 0
+                        for record in inventory.itertuples():
+                            # construct out pathname
+                            out_pathname = os.path.join(root_path, self._endpoint.get_pathname(record, aoi))
 
-                        # check pathname exists or overwrite 
-                        if not os.path.exists(out_pathname) or args.overwrite:
+                            # check pathname exists or overwrite
+                            if not os.path.exists(out_pathname) or args.overwrite:
 
-                            if not os.path.exists(os.path.dirname(out_pathname)):
-                                os.makedirs(os.path.dirname(out_pathname))
+                                if not os.path.exists(os.path.dirname(out_pathname)):
+                                    os.makedirs(os.path.dirname(out_pathname))
 
-                            if not args.info_only:
                                 # retrieve images aligned with constraints
                                 print(f'downloading : {out_pathname}')
                                 self._downloader.process(self._endpoint.get_uri(record),
@@ -80,18 +81,16 @@ class Extractor:
                                                          out_pathname)
                                 print('... OK!')
 
-                        else:
+                            else:
 
-                            # output file already exists - ignore
-                            print(f'output file already exists: {out_pathname}')
+                                # output file already exists - ignore
+                                print(f'output file already exists: {out_pathname}')
 
-                        # check downloads vs max downloads
-                        downloads += 1
-                        if args.max_downloads is not None and downloads >= args.max_downloads:
-                            print(f'... exiting after {downloads} downloads')
-                            break
-
-        return
+                            # check downloads vs max downloads
+                            downloads += 1
+                            if args.max_downloads is not None and downloads >= args.max_downloads:
+                                print(f'... exiting after {downloads} downloads')
+                                break
 
     @staticmethod
     def get_aois(config):
