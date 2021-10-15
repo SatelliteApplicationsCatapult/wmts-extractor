@@ -179,14 +179,14 @@ The result of this filter using the [example config file for securewatch](cfg/se
 2011-01-01    Period 1   11   12   12
 2012-12-31    Period 1   21   22   23
 2014-12-31    Period 1   31   32   33
-2015-01-31    Period 1   41   42   43
-2016-01-25    Period 1   51   52   53
-2017-01-18    Period 1   61   62   63
-2018-01-12    Period 1   71   72   73
+2015-01-31    Period 2   41   42   43
+2016-01-25    Period 2   51   52   53
+2017-01-18    Period 2   61   62   63
+2018-01-12    Period 2   71   72   73
 
 Datasets collocated with AoI: aoi-0
        platform                               uid                      product        acq_datetime  cloud_cover  resolution     overlap  Weights Period Name
-0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.000000  61       Period 1
+0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.000000  61       Period 2
 1  WorldView-02  4e1a9ad33e8e8867f3198b6cbb1906cf  Pan Sharpened Natural Color 2014-03-10 07:41:54  0.038534     0.5         100.000000  23       Period 1
 2  WorldView-03  66c9145994bd1dae337d05708f3c2c8c  Pan Sharpened Natural Color 2014-11-04 07:36:45  0.000000     0.3         50.113704   21       Period 1
 3  WorldView-03  9a93bbeb4991fa865fb083809cbf0e63  Pan Sharpened Natural Color 2014-10-21 07:16:16  0.011507     0.3         100.000000  21       Period 1
@@ -206,17 +206,16 @@ number of cloud cover (-c), but will ignore any other related to time periods (-
 2011-01-01    Period 1   11   12   12
 2012-12-31    Period 1   21   22   23
 2014-12-31    Period 1   31   32   33
-2015-01-31    Period 1   41   42   43
-2016-01-25    Period 1   51   52   53
-2017-01-18    Period 1   61   62   63
-2018-01-12    Period 1   71   72   73
+2015-01-31    Period 2   41   42   43
+2016-01-25    Period 2   51   52   53
+2017-01-18    Period 2   61   62   63
+2018-01-12    Period 2   71   72   73
 
 Datasets collocated with AoI: aoi-0
        platform                               uid                      product        acq_datetime  cloud_cover  resolution  overlap  Weights Period Name
-0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.0    61       Period 1
+0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.0    61       Period 2
 1  WorldView-02  4e1a9ad33e8e8867f3198b6cbb1906cf  Pan Sharpened Natural Color 2014-03-10 07:41:54  0.038534     0.5         100.0    23       Period 1
 2  WorldView-03  9a93bbeb4991fa865fb083809cbf0e63  Pan Sharpened Natural Color 2014-10-21 07:16:16  0.011507     0.3         100.0    21       Period 1
 3  GeoEye-01     f0a5b45e09f868a70e004337488674c7  Pan Sharpened Natural Color 2011-10-23 07:22:39  0.007486     0.4         100.0    12       Period 1
 4  WorldView-02  1ffcacf3ebb20241b067a14b4ffd2786  Pan Sharpened Natural Color 2011-03-10 07:58:48  0.029268     0.4         100.0    12       Period 1
-
 ```

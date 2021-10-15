@@ -163,6 +163,7 @@ class Extractor:
             end_first_period = periods[0].get("date_range")[-1]
             nweights_first_period = len(periods[0].get('weights'))
             end_period = periods[-1].get('date_range')[-1]
+            weights = []
 
             # filter inventory by initial and end date
             inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
@@ -172,7 +173,8 @@ class Extractor:
                                   (inventory['acq_datetime'] <= end_period)]
 
             date_index = pd.date_range(start=start_period, end=end_first_period, periods=nweights_first_period)
-            weights = periods[0].get('weights')
+
+            weights += periods[0].get('weights')
 
             for p in periods[1:]:
                 date_index = date_index.union(pd.date_range(start=p.get("date_range")[0],
@@ -180,7 +182,7 @@ class Extractor:
                                                             periods=len(p.get('weights'))))
                 weights += p.get('weights')
 
-            period_names = [p.get('name') for p in periods for i in range(0, len(p.get('weights')))]
+            period_names = [p.get('name') for p in periods for w in p.get('weights')]
 
             tr_values = pd.DataFrame([[period_names[i]]+w for i, w in enumerate(weights)], index=date_index,
                                      columns=['Period Name'] + resolution_indexes)
