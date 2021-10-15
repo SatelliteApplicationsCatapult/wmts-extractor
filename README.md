@@ -2,13 +2,13 @@
 
 ## Overview
 
-This software implements functionality to query Digital Globe catalogue and facilitate download of Maxar satellite 
+This software implements functionality to query MAXAR SecureWatch catalogue and facilitate download of Maxar satellite 
 imagery satisfying user-defined spatial and temporal constraints via cost and bandwidth-efficient WMTS end point.
 
 The software utilises a series of standard OGC WFS requests to retrieve metadata of imagery aligned with area of 
 interest – point, line and polygon geometries are supported – in any OGR supported file format – 
 see: <https://gdal.org/drivers/vector/index.html>. Additional filter parameters may also be specified by the end user 
-based on acquisition date, product type, cloud cover, etc. Response from Digital Globe WFS end point is subsequently 
+based on acquisition date, product type, cloud cover, etc. Response from MAXAR SecureWatch WFS end point is subsequently 
 parsed to retrieve unique feature identifier of images satisfying user-defined constraints.
 
 For each image identified for download, the software subsequently forwards a series of WMTS requests – with unique 
