@@ -1,0 +1,25 @@
+FROM satapps/wmts-extractor
+
+EXPOSE 8888
+
+RUN pip install jupyterlab
+
+# Add qgrid widget
+
+#RUN pip install qgrid
+#RUN apt-get update && apt-get upgrade -y
+#RUN apt install nodejs npm -y
+#RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
+#RUN jupyter labextension install qgrid2
+#RUN jupyter nbextension enable --py --sys-prefix qgrid
+#RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension
+
+# Add Tini. Tini operates as a process subreaper for jupyter. This prevents kernel crashes.
+ENV TINI_VERSION v0.6.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+WORKDIR /notebooks
+
+CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
