@@ -52,6 +52,7 @@ def parse_arguments(args=None):
     parser.add_argument('--dirs', help='path structure', action='store_true', default=None)
     parser.add_argument('--format', help='output image format', default='GTIFF')
     parser.add_argument('--options', help='output image creation options', default="TILED=YES COMPRESS=LZW")
+    parser.add_argument('--prettify_table', help='Prints table nicely', default=None)
 
     return parser.parse_args(args)
 
@@ -70,7 +71,12 @@ def cli():
 
     # extract tiles coincident with point geometries
     obj = Extractor(config, args)
-    obj.process(config, args)
+    tiles = obj.get_tiles(config, args)
+
+    if args.info_only:
+        print(tiles.loc[:, tiles.columns != 'geometry'])
+    else:
+        obj.download_tiles(tiles, config, args)
 
 
 # execute cli
