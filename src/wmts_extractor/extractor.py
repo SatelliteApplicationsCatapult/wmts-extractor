@@ -11,6 +11,7 @@ from munch import munchify
 from .endpoint.mapserver import MapServer
 from .endpoint.sentinelhub import SentinelHub
 from .endpoint.securewatch import SecureWatch
+from .utils import obtain_decision_table
 
 endpoint_class = {
     "mapserver": MapServer,
@@ -137,51 +138,29 @@ class Extractor:
             if not isinstance(self._args.period_resolution, dict):
                 # load config parameters from file
                 with open(self._args.period_resolution, 'r') as f:
-                    tr_file = munchify(yaml.safe_load(f))
+                    period_resolution = munchify(yaml.safe_load(f))
             else:
-                tr_file = self._args.period_resolution
-
-            number_images = tr_file.get('number_images')
-            periods = tr_file.get('periods')
-            resolution_indexes = [str(r) for r in tr_file.get('resolutions')]
-
-            start_period = periods[0].get('date_range')[0]
-            end_first_period = periods[0].get("date_range")[-1]
-            nweights_first_period = len(periods[0].get('weights'))
-            end_period = periods[-1].get('date_range')[-1]
-            weights = []
+                period_resolution = self._args.period_resolution
 
             # filter inventory by initial and end date
+            start_period = period_resolution.get('periods')[0].get('date_range')[0]
+            end_period = period_resolution.get('periods')[-1].get('date_range')[-1]
+
             inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
                                   (inventory['acq_datetime'] >= start_period)]
 
             inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
                                   (inventory['acq_datetime'] <= end_period)]
 
-            date_index = pd.date_range(start=start_period, end=end_first_period, periods=nweights_first_period)
+            decision_table = obtain_decision_table(period_resolution)
+            resolution_indexes = [str(r) for r in period_resolution.get('resolutions')]
+            number_images = period_resolution.get('number_images')
 
-            weights += periods[0].get('weights')
-
-            for p in periods[1:]:
-                date_index = date_index.union(pd.date_range(start=p.get("date_range")[0],
-                                                            end=p.get("date_range")[1],
-                                                            periods=len(p.get('weights'))))
-                weights += p.get('weights')
-
-            period_names = [p.get('name') for p in periods for w in p.get('weights')]
-
-            tr_values = pd.DataFrame([[period_names[i]]+w for i, w in enumerate(weights)], index=date_index,
-                                     columns=['Period Name'] + resolution_indexes)
-
-            print("\n\t\tDecision Table")
-            print(tr_values)
-            print()
-
-            pr_weights = [tr_values.loc[tr_values.truncate(after=dt).index[-1], str(resolution)]
+            pr_weights = [decision_table.loc[decision_table.truncate(after=dt).index[-1], str(resolution)]
                           if str(resolution) in resolution_indexes else 0
                           for idx, dt, resolution in inventory[['acq_datetime', 'resolution']].itertuples()]
 
-            p_names = [tr_values.loc[tr_values.truncate(after=dt).index[-1], 'Period Name']
+            p_names = [decision_table.loc[decision_table.truncate(after=dt).index[-1], 'Period Name']
                        if str(resolution) in resolution_indexes else 0
                        for idx, dt, resolution in inventory[['acq_datetime', 'resolution']].itertuples()]
 
