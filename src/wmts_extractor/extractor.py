@@ -44,18 +44,21 @@ class Extractor:
         """
         search and download wmts tiles collocated with spatiotemporal constraints
         """
-        aois = self.get_aois()
-        inventory = None
+        try:
+            aois = self.get_aois()
+            inventory = None
+            # check valid aois
+            if aois is not None:
+                # for each aoi
+                for aoi in aois.itertuples():
+                    # get image inventory collocated with aoi
+                    inventory = self._endpoint.get_inventory(aoi.geometry)
+                    if inventory is not None:
+                        # apply filter constraints
+                        inventory = self.filter_inventory(inventory)
 
-        # check valid aois
-        if aois is not None:
-            # for each aoi
-            for aoi in aois.itertuples():
-                # get image inventory collocated with aoi
-                inventory = self._endpoint.get_inventory(aoi.geometry)
-                if inventory is not None:
-                    # apply filter constraints
-                    inventory = self.filter_inventory(inventory)
+        except Exception as e:
+            raise e
 
         return inventory
 

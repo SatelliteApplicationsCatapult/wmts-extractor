@@ -68,14 +68,18 @@ def cli():
     with open(args.config_file, 'r') as f:
         config = yaml.safe_load(f)
 
-    # extract tiles coincident with point geometries
-    obj = Extractor(config, args)
-    tiles = obj.get_tiles()
+    try:
+        # extract tiles coincident with point geometries
+        obj = Extractor(config, args)
+        tiles = obj.get_tiles()
 
-    if args.info_only:
-        print(tiles.loc[:, tiles.columns != 'geometry'])
-    else:
-        obj.download_tiles(tiles)
+        if args.info_only:
+            print(tiles.loc[:, tiles.columns != 'geometry'])
+        else:
+            obj.download_tiles(tiles)
+
+    except Exception as e:
+        print(e)
 
 
 # execute cli

@@ -197,6 +197,6 @@ class Catalog(WfsCatalog):
                         features.append(schema)
 
         except Exception as e:
-            print('Catalog Exception: {} (check credentials and connect id)'.format(str(e)))
+            raise RuntimeError('Invalid credentials') from e
 
         return features
