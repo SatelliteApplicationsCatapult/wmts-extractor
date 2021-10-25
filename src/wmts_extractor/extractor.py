@@ -21,24 +21,29 @@ endpoint_class = {
 
 class Extractor:
 
-    def __init__(self, config, args):
+    def __init__(self, config: dict, args):
 
         """
         constructor
         """
 
         # create endpoint
-        _class = endpoint_class[config.endpoint.name]
+        _class = endpoint_class[config.get('endpoint').get('name')]
 
-        self._endpoint = _class(config.endpoint, args)
-        self._downloader = Downloader(config.endpoint)
+        self._endpoint = _class(munchify(config.get('endpoint')), munchify(args))
+        self._downloader = Downloader(munchify(config.get('endpoint')))
 
-    def get_tiles(self, config, args):
+        self._config = munchify(config)
+        self._args = munchify(args)
+
+        self._aoi = munchify(config.get('aoi'))
+
+    def get_tiles(self):
 
         """
         search and download wmts tiles collocated with spatiotemporal constraints
         """
-        aois = self.get_aois(config.aoi)
+        aois = self.get_aois()
         inventory = None
 
         # check valid aois
@@ -49,13 +54,13 @@ class Extractor:
                 inventory = self._endpoint.get_inventory(aoi.geometry)
                 if inventory is not None:
                     # apply filter constraints
-                    inventory = self.filter_inventory(inventory, args)
+                    inventory = self.filter_inventory(inventory)
 
         return inventory
 
-    def download_tiles(self, inventory, config, args):
-        root_path = os.path.join(args.out_path, config.endpoint.name)
-        aois = self.get_aois(config.aoi)
+    def download_tiles(self, inventory):
+        root_path = os.path.join(self._args.out_path, self._config.endpoint.name)
+        aois = self.get_aois()
         downloads = 0
         # check valid aois
         if aois is not None:
@@ -66,7 +71,7 @@ class Extractor:
                     out_pathname = os.path.join(root_path, self._endpoint.get_pathname(record, aoi))
 
                     # check pathname exists or overwrite
-                    if not os.path.exists(out_pathname) or args.overwrite:
+                    if not os.path.exists(out_pathname) or self._args.overwrite:
 
                         if not os.path.exists(os.path.dirname(out_pathname)):
                             os.makedirs(os.path.dirname(out_pathname))
@@ -75,7 +80,7 @@ class Extractor:
                         print(f'downloading : {out_pathname}')
                         self._downloader.process(self._endpoint.get_uri(record),
                                                  aoi,
-                                                 args,
+                                                 self._args,
                                                  out_pathname)
                         print('... OK!')
 
@@ -86,12 +91,11 @@ class Extractor:
 
                     # check downloads vs max downloads
                     downloads += 1
-                    if args.max_downloads is not None and downloads >= args.max_downloads:
+                    if self._args.max_downloads is not None and downloads >= self._args.max_downloads:
                         print(f'... exiting after {downloads} downloads')
                         break
 
-    @staticmethod
-    def get_aois(config):
+    def get_aois(self):
 
         """
         load aois from file into geodataframe
@@ -102,40 +106,40 @@ class Extractor:
         try:
 
             # open geometries pathname
-            ds = ogr.Open(config.pathname)
+            ds = ogr.Open(self._aoi.pathname)
             if ds is not None:
 
                 # convert ogr feature to shapely object
                 layer = ds.GetLayer(0)
                 for idx, feature in enumerate(layer):
                     # create aoi object
-                    config.name = f'aoi-{idx}'
-                    aois.append(Aoi.from_ogr_feature(feature, config))
+                    self._aoi.name = f'aoi-{idx}'
+                    aois.append(Aoi.from_ogr_feature(feature, self._aoi))
             else:
                 # file not found
                 raise Exception('pathname not found')
 
         # error processing aoi feature
         except Exception as e:
-            print('AoI Exception {}: -> {}'.format(str(e), config.pathname))
+            print('AoI Exception {}: -> {}'.format(str(e), self._aoi.pathname))
             aois.clear()
 
         return gpd.GeoDataFrame(aois, crs='EPSG:4326', geometry='geometry') if len(aois) > 0 else None
 
-    def filter_inventory(self, inventory, args):
+    def filter_inventory(self, inventory):
 
         """
         filter image inventory on user-defined conditions passed via command line
         """
 
-        if args.period_resolution:
+        if self._args.period_resolution:
 
-            if not isinstance(args.period_resolution, dict):
+            if not isinstance(self._args.period_resolution, dict):
                 # load config parameters from file
-                with open(args.period_resolution, 'r') as f:
+                with open(self._args.period_resolution, 'r') as f:
                     tr_file = munchify(yaml.safe_load(f))
             else:
-                tr_file = args.period_resolution
+                tr_file = self._args.period_resolution
 
             number_images = tr_file.get('number_images')
             periods = tr_file.get('periods')
@@ -189,33 +193,33 @@ class Extractor:
         else:
 
             # apply start datetime condition
-            if args.start_datetime is not None:
+            if self._args.start_datetime is not None:
                 inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                      (inventory['acq_datetime'] >= args.start_datetime)]
+                                      (inventory['acq_datetime'] >= self._args.start_datetime)]
 
             # apply end datetime condition
-            if args.end_datetime is not None:
+            if self._args.end_datetime is not None:
                 inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                      (inventory['acq_datetime'] <= args.end_datetime)]
+                                      (inventory['acq_datetime'] <= self._args.end_datetime)]
 
-            if args.max_resolution is not None:
+            if self._args.max_resolution is not None:
                 inventory = inventory[(pd.isnull(inventory['resolution'])) |
-                                      (inventory['resolution'] <= args.max_resolution)]
+                                      (inventory['resolution'] <= self._args.max_resolution)]
 
         # apply max cloud coverage condition
-        if args.max_cloud is not None:
+        if self._args.max_cloud is not None:
             inventory = inventory[(pd.isnull(inventory['cloud_cover'])) |
-                                  (inventory['cloud_cover'] <= args.max_cloud)]
+                                  (inventory['cloud_cover'] <= self._args.max_cloud)]
 
         # apply platform condition
-        if args.platforms is not None:
+        if self._args.platforms is not None:
             inventory = inventory[(pd.isnull(inventory['platform'])) |
-                                  (inventory['platform'].isin(args.platforms))]
+                                  (inventory['platform'].isin(self._args.platforms))]
 
         # apply min overlap condition
-        if args.overlap is not None:
+        if self._args.overlap is not None:
             inventory = inventory[(pd.isnull(inventory['overlap'])) |
-                                  (inventory['overlap'] >= args.overlap)]
+                                  (inventory['overlap'] >= self._args.overlap)]
 
         # endpoint specific filtering
         return self._endpoint.filter_inventory(inventory)
