@@ -126,20 +126,20 @@ Download all available imagery from zoom level 19 tile pyramid hosted by Digital
 imagery into sub-directories below `/images`
 
 ``` bash
-# wmts-extractor /cfg/securewatch.yml 19 /images
+wmts-extractor /cfg/securewatch.yml 19 /images
 ```
 
 Download all available zoom level 18 imagery for 2018 from Digital Globe WMTS end point and copy output imagery into 
 sub-directories below `/images`
 
 ``` bash
-# wmts-extractor /cfg/securewatch.yml 18 /images -s "01/01/2018 00:00:00" -e "31/12/2018 23:59:59"
+wmts-extractor /cfg/securewatch.yml 18 /images -s "01/01/2018 00:00:00" -e "31/12/2018 23:59:59"
 ```
 
 Retrieve metadata of available zoom level 17 imagery for 2019 and display on command line:
 
 ``` bash
-# wmts-extractor /cfg/securewatch.yml 17 /images -s "01/01/2019 00:00:00" -e "31/12/2019 23:59:59" --info_only
+wmts-extractor /cfg/securewatch.yml 17 /images -s "01/01/2019 00:00:00" -e "31/12/2019 23:59:59" --info_only
 ```
 
 ## Appendix
@@ -174,16 +174,6 @@ The result of this filter using the [example config file for securewatch](cfg/se
 ```bash
 # wmts-extractor /cfg/securewatch.yml 18 /images/ -pr /cfg/period_resolution_filter.yml --info_only
 
-                Decision Table
-           Period Name  0.3  0.4  0.5
-2011-01-01    Period 1   11   12   12
-2012-12-31    Period 1   21   22   23
-2014-12-31    Period 1   31   32   33
-2015-01-31    Period 2   41   42   43
-2016-01-25    Period 2   51   52   53
-2017-01-18    Period 2   61   62   63
-2018-01-12    Period 2   71   72   73
-
 Datasets collocated with AoI: aoi-0
        platform                               uid                      product        acq_datetime  cloud_cover  resolution     overlap  Weights Period Name
 0  WorldView-03  708f35be5cdb8810eff1a91f48420951  Pan Sharpened Natural Color 2017-08-28 07:50:19  0.000000     0.3         100.000000  61       Period 2
@@ -200,16 +190,6 @@ number of cloud cover (-c), but will ignore any other related to time periods (-
 
 ```bash
 # wmts-extractor /cfg/securewatch.yml 18 /images/ -pr /cfg/period_resolution_filter.yml -o 90 -c 0.1 --info_only
-
-                Decision Table
-           Period Name  0.3  0.4  0.5
-2011-01-01    Period 1   11   12   12
-2012-12-31    Period 1   21   22   23
-2014-12-31    Period 1   31   32   33
-2015-01-31    Period 2   41   42   43
-2016-01-25    Period 2   51   52   53
-2017-01-18    Period 2   61   62   63
-2018-01-12    Period 2   71   72   73
 
 Datasets collocated with AoI: aoi-0
        platform                               uid                      product        acq_datetime  cloud_cover  resolution  overlap  Weights Period Name
