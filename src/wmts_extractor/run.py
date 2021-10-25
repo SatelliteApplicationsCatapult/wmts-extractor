@@ -12,7 +12,6 @@ def valid_date_time_argument(arg):
 
     try:
         # attempt to parse arg string into datetime obj
-        print(arg)
         return datetime.strptime(arg, "%d/%m/%Y %H:%M:%S")
     except ValueError:
         msg = "Argument ({0}) not valid! Expected format, DD/MM/YYYY HH:MM:SS!".format(arg)
