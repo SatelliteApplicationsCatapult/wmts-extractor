@@ -1,4 +1,7 @@
 import os
+from pathlib import Path
+
+import shutil
 import yaml
 
 import geopandas as gpd
@@ -11,7 +14,7 @@ from munch import munchify
 from .endpoint.mapserver import MapServer
 from .endpoint.sentinelhub import SentinelHub
 from .endpoint.securewatch import SecureWatch
-from .utils import obtain_decision_table
+from .utils import obtain_decision_table, upload_to_s3
 
 endpoint_class = {
     "mapserver": MapServer,
@@ -203,3 +206,19 @@ class Extractor:
 
         # endpoint specific filtering
         return self._endpoint.filter_inventory(inventory)
+
+    def push_tiles_to_s3(self, tiles, s3_endpoint, s3_bucket, s3_key_id=None, s3_access_key=None, s3_root_key=None):
+        print("Preparing tiles...")
+        for file in self.download_tiles(tiles):
+            if s3_root_key:
+                # Generate a key with (root_key)/(endpoint_name)/(AOI ID)/(platform)/(Datetime)/(Output Image)
+                key = f"{s3_root_key}/{Path(*Path(file).parts[-5:])}"
+            else:
+                # Generate a key with (endpoint_name)/(AOI ID)/(platform)/(Datetime)/(Output Image)
+                key = str(Path(*Path(file).parts[-5:]))
+
+            print(f"Pushing tile to {s3_endpoint}/{s3_bucket}/{key}")
+            if upload_to_s3(file, s3_endpoint, s3_bucket, s3_key_id, s3_access_key, key) == 200:
+                Path(file).unlink()  # Remove file
+
+        shutil.rmtree(f"{self._args.out_path}/{self._config.endpoint.name}")

@@ -47,7 +47,6 @@ class Downloader:
         """
         download tiles aligned with aoi and assimilate into single georeferenced image
         """
-        print(f'Downloading image to {out_pathname}')
 
         # create output folder if required
         out_path = os.path.dirname(out_pathname)

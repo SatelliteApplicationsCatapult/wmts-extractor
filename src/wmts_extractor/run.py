@@ -86,6 +86,7 @@ def cli():
         if args.info_only:
             print(tiles.loc[:, tiles.columns != 'geometry'])
         else:
+            print("Downloading tiles...")
             for file in obj.download_tiles(tiles):
                 print(f"Downloaded completed for {file}")
                 if args.s3:
