@@ -1,4 +1,8 @@
 import pandas as pd
+import urllib3
+from .s3 import S3
+
+urllib3.disable_warnings()
 
 
 def obtain_decision_table(period_resolution: dict) -> pd.DataFrame:
@@ -29,3 +33,19 @@ def obtain_decision_table(period_resolution: dict) -> pd.DataFrame:
                                   columns=['Period Name'] + resolution_indexes)
 
     return decision_table
+
+
+def upload_to_s3(file: str, endpoint: str, bucket: str, key_id: str, access_key: str, key: str) -> int:
+    """ Upload the given file to s3 bucket given: endpoint, bucket, key_id, access_key and key
+     Return HTTP Status Code
+    """
+    s3 = S3(key=key_id, secret=access_key, s3_endpoint=endpoint, region_name=None)
+
+    with open(file, 'rb') as f:
+        response = s3.put_object(
+            bucket_name=bucket,
+            key=key,
+            body=f
+        )
+
+    return response.get('ResponseMetadata').get('HTTPStatusCode')

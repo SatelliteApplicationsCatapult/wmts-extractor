@@ -81,12 +81,10 @@ class Extractor:
                             os.makedirs(os.path.dirname(out_pathname))
 
                         # retrieve images aligned with constraints
-                        print(f'downloading : {out_pathname}')
-                        self._downloader.process(self._endpoint.get_uri(record),
-                                                 aoi,
-                                                 self._args,
-                                                 out_pathname)
-                        print('... OK!')
+                        yield self._downloader.process(self._endpoint.get_uri(record),
+                                                       aoi,
+                                                       self._args,
+                                                       out_pathname)
 
                     else:
 

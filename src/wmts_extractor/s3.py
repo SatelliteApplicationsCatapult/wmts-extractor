@@ -1,5 +1,5 @@
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ParamValidationError
 
 
 class S3:
@@ -70,8 +70,8 @@ class S3:
         try:
             response = self.s3_resource.Object(bucket_name=bucket_name, key=key).put(Body=body)
             return response
-        except ClientError as ex:
-            return None
+        except ClientError as e:
+            raise RuntimeError(f"ClientError: {e}")
 
     def list_common_prefixes(self, bucket_name, prefix):
         """

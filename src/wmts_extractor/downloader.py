@@ -47,6 +47,7 @@ class Downloader:
         """
         download tiles aligned with aoi and assimilate into single georeferenced image
         """
+        print(f'Downloading image to {out_pathname}')
 
         # create output folder if required
         out_path = os.path.dirname(out_pathname)
@@ -89,12 +90,12 @@ class Downloader:
         for f in files:
             os.remove(f)
 
-        # remove path if empty 
+        # remove path if empty
         files = glob.glob(os.path.join(out_path, '*'))
         if len(files) == 0:
             os.rmdir(out_path)
 
-        return
+        return out_pathname
 
     def get_task_list(self, uri, bbox, zoom, out_path):
 
