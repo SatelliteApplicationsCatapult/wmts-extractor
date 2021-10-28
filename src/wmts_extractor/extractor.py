@@ -10,6 +10,7 @@ from .aoi import Aoi
 from .downloader import Downloader
 from osgeo import ogr
 from munch import munchify
+from progress.bar import Bar
 
 from .endpoint.mapserver import MapServer
 from .endpoint.sentinelhub import SentinelHub
@@ -49,21 +50,22 @@ class Extractor:
         """
         try:
             aois = self.get_aois()
-            inventory = None
+            inventories = []
             # check valid aois
             if aois is not None:
                 # for each aoi
-                for aoi in aois.itertuples():
-                    # get image inventory collocated with aoi
-                    inventory = self._endpoint.get_inventory(aoi.geometry)
-                    if inventory is not None:
-                        # apply filter constraints
-                        inventory = self.filter_inventory(inventory)
+                with Bar('Processing tiles...', suffix='%(percent).1f%% - %(eta)ds', max=len(aois)) as bar:
+                    for aoi in aois.itertuples():
+                        # get image inventory collocated with aoi
+                        inventory = self._endpoint.get_inventory(aoi.geometry)
 
+                        inventory['aoi_name'] = aoi.name
+                        inventories.append(inventory)
+                        bar.next()
         except Exception as e:
             raise e
 
-        return inventory
+        return gpd.GeoDataFrame(pd.concat(inventories, ignore_index=True))
 
     def download_tiles(self, inventory):
         root_path = os.path.join(self._args.out_path, self._config.endpoint.name)
@@ -74,31 +76,32 @@ class Extractor:
             # for each aoi
             for aoi in aois.itertuples():
                 for record in inventory.itertuples():
-                    # construct out pathname
-                    out_pathname = os.path.join(root_path, self._endpoint.get_pathname(record, aoi))
+                    if aoi.name == record.aoi_name:
+                        # construct out pathname
+                        out_pathname = os.path.join(root_path, self._endpoint.get_pathname(record, aoi))
 
-                    # check pathname exists or overwrite
-                    if not os.path.exists(out_pathname) or self._args.overwrite:
+                        # check pathname exists or overwrite
+                        if not os.path.exists(out_pathname) or self._args.overwrite:
 
-                        if not os.path.exists(os.path.dirname(out_pathname)):
-                            os.makedirs(os.path.dirname(out_pathname))
+                            if not os.path.exists(os.path.dirname(out_pathname)):
+                                os.makedirs(os.path.dirname(out_pathname))
 
-                        # retrieve images aligned with constraints
-                        yield self._downloader.process(self._endpoint.get_uri(record),
-                                                       aoi,
-                                                       self._args,
-                                                       out_pathname)
+                            # retrieve images aligned with constraints
+                            yield self._downloader.process(self._endpoint.get_uri(record),
+                                                           aoi,
+                                                           self._args,
+                                                           out_pathname)
 
-                    else:
+                        else:
 
-                        # output file already exists - ignore
-                        print(f'output file already exists: {out_pathname}')
+                            # output file already exists - ignore
+                            print(f'output file already exists: {out_pathname}')
 
-                    # check downloads vs max downloads
-                    downloads += 1
-                    if self._args.max_downloads is not None and downloads >= self._args.max_downloads:
-                        print(f'... exiting after {downloads} downloads')
-                        break
+                        # check downloads vs max downloads
+                        downloads += 1
+                        if self._args.max_downloads is not None and downloads >= self._args.max_downloads:
+                            print(f'... exiting after {downloads} downloads')
+                            break
 
     def get_aois(self):
 
@@ -131,7 +134,7 @@ class Extractor:
 
         return gpd.GeoDataFrame(aois, crs='EPSG:4326', geometry='geometry') if len(aois) > 0 else None
 
-    def filter_inventory(self, inventory):
+    def filter_tiles(self, inventory):
 
         """
         filter image inventory on user-defined conditions passed via command line

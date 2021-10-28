@@ -83,9 +83,9 @@ def cli():
         obj = Extractor(config, args)
         tiles = obj.get_tiles()
 
-        if args.info_only:
-            print(tiles.loc[:, tiles.columns != 'geometry'])
-        else:
+        print(tiles.loc[:, tiles.columns != 'geometry'])
+
+        if not args.info_only:
             print("Downloading tiles...")
             for file in obj.download_tiles(tiles):
                 print(f"Downloaded completed for {file}")
