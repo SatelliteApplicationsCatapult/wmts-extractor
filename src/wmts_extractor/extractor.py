@@ -3,6 +3,7 @@ from pathlib import Path
 
 import shutil
 import yaml
+import json
 
 import geopandas as gpd
 import pandas as pd
@@ -121,7 +122,7 @@ class Extractor:
                 layer = ds.GetLayer(0)
                 for idx, feature in enumerate(layer):
                     # create aoi object
-                    self._aoi.name = f'aoi-{idx}'
+                    self._aoi.name = json.loads(feature.ExportToJson()).get('properties').get('name')
                     aois.append(Aoi.from_ogr_feature(feature, self._aoi))
             else:
                 # file not found
