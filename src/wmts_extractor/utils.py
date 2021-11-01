@@ -2,8 +2,47 @@ import pandas as pd
 import geopandas as gpd
 import urllib3
 from .s3 import S3
+import folium
 
 urllib3.disable_warnings()
+
+
+class OpenStreetMap:
+    def __init__(self, df: gpd.GeoDataFrame, popup_column: str, epsg: int, aoi_file: str):
+        self.df = df
+        self.map = folium.Map(location=[df.envelope.centroid[0].y, df.envelope.centroid[0].x], zoom_start=10,
+                              tiles='CartoDB positron')
+        self.popup_column = popup_column
+        self.df.to_crs(epsg=epsg)
+        self.shp_file = gpd.read_file(aoi_file)
+
+    def show(self):
+        tiles_group = folium.FeatureGroup(name="Tiles")
+        for _, r in self.df.iterrows():
+            # Without simplifying the representation of each borough,
+            # the map might not be displayed
+            sim_geo = gpd.GeoSeries(r['geometry']).simplify(tolerance=0.001)
+            geo_j = sim_geo.to_json()
+            geo_j = folium.GeoJson(data=geo_j,
+                                   style_function=lambda x: {'weight': 0.5, 'color': 'blue', 'fillColor': 'blue'})
+            folium.Popup(r[self.popup_column]).add_to(geo_j)
+            geo_j.add_to(tiles_group)
+
+        aoi_group = folium.FeatureGroup(name="AOIs")
+        for _, r in self.df.iterrows():
+            for idx, feature in self.shp_file.iterrows():
+                if r['aoi_name'] == feature['name']:
+                    aoi_geo_j = folium.GeoJson(data=feature['geometry'],
+                                               style_function=lambda x: {'weight': 1, 'color': 'red',
+                                                                         'fillColor': 'red'})
+                    folium.Popup(feature['name']).add_to(aoi_geo_j)
+                    aoi_geo_j.add_to(aoi_group)
+
+        tiles_group.add_to(self.map)
+        aoi_group.add_to(self.map)
+        folium.LayerControl().add_to(self.map)
+
+        return self.map
 
 
 def obtain_decision_table(period_resolution: dict) -> pd.DataFrame:
