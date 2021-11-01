@@ -1,4 +1,5 @@
 import pandas as pd
+import geopandas as gpd
 import urllib3
 from .s3 import S3
 
@@ -49,3 +50,34 @@ def upload_to_s3(file: str, endpoint: str, bucket: str, key_id: str, access_key:
         )
 
     return response.get('ResponseMetadata').get('HTTPStatusCode')
+
+
+def filter_tiles_by_pr_table(tiles, pr_table, number_images_per_period):
+    """
+    It will compare each element in the tiles table and assign a weight based on the resolution and time period.
+    After that, it will filter for each period in each AOI and select the best `number_images_per_period` images for
+    each of them.
+    """
+    filtered_pr_tiles = []
+
+    resolution_indexes = list(pr_table.columns[1:].values)
+
+    pr_weights = [pr_table.loc[pr_table.truncate(after=dt).index[-1], str(resolution)]
+                  if str(resolution) in resolution_indexes else None
+                  for idx, dt, resolution in tiles[['acq_datetime', 'resolution']].itertuples()]
+
+    p_names = [pr_table.loc[pr_table.truncate(after=dt).index[-1], 'Period Name']
+               if str(resolution) in resolution_indexes else None
+               for idx, dt, resolution in tiles[['acq_datetime', 'resolution']].itertuples()]
+
+    tiles['weights'] = pr_weights
+    tiles['period'] = p_names
+
+    for aoi_name in tiles.aoi_name.unique():
+        for period in tiles.period.unique():
+            filtered_pr_tiles.append(
+                tiles.loc[(tiles.period == period) &
+                          (tiles.aoi_name == aoi_name)].sort_values(by='weights',
+                                                                    ascending=False).head(number_images_per_period))
+
+    return gpd.GeoDataFrame(pd.concat(filtered_pr_tiles, ignore_index=True))
