@@ -82,6 +82,7 @@ def cli():
         # extract tiles coincident with point geometries
         obj = Extractor(config, args)
         tiles = obj.get_tiles()
+        tiles = obj.filter_tiles(tiles)
 
         print(tiles.loc[:, tiles.columns != 'geometry'])
 
