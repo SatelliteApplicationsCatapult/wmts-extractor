@@ -123,6 +123,8 @@ class Extractor:
                 for idx, feature in enumerate(layer):
                     # create aoi object
                     self._aoi.name = json.loads(feature.ExportToJson()).get('properties').get('name')
+                    if not self._aoi.name:
+                        self._aoi.name = f'aoi-{idx}'
                     aois.append(Aoi.from_ogr_feature(feature, self._aoi))
             else:
                 # file not found
