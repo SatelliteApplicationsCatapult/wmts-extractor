@@ -53,7 +53,7 @@ def parse_arguments(args=None):
     parser.add_argument('--max_downloads', type=int, help='max compliant downloads for aoi', default=None)
     parser.add_argument('--dirs', help='path structure', action='store_true', default=None)
     parser.add_argument('--format', help='output image format', default='GTIFF')
-    parser.add_argument('--options', help='output image creation options', default="TILED=YES COMPRESS=LZW")
+    parser.add_argument('--options', help='output image creation options', default="-f COG")
     parser.add_argument('--prettify_table', help='Prints table nicely', default=None)
 
     parser.add_argument('--s3', action='store_true', help='Upload downloaded images to S3')
