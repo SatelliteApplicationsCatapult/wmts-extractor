@@ -123,6 +123,8 @@ class Extractor:
                 for idx, feature in enumerate(layer):
                     # create aoi object
                     self._aoi.name = json.loads(feature.ExportToJson()).get('properties').get('name')
+                    if not self._aoi.name:
+                        self._aoi.name = f'aoi-{idx}'
                     aois.append(Aoi.from_ogr_feature(feature, self._aoi))
             else:
                 # file not found
@@ -178,16 +180,17 @@ class Extractor:
             inventory = inventory.sort_values(by='Weights', ascending=False).head(number_images)
 
         else:
-
-            # apply start datetime condition
-            if self._args.start_datetime is not None:
+            if (self._args.start_datetime and self._args.end_datetime) and \
+                    self._args.start_datetime < self._args.end_datetime:
+                # apply start datetime condition
                 inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
                                       (inventory['acq_datetime'] >= self._args.start_datetime)]
 
-            # apply end datetime condition
-            if self._args.end_datetime is not None:
+                # apply end datetime condition
                 inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
                                       (inventory['acq_datetime'] <= self._args.end_datetime)]
+            else:
+                print("WARNING: start datetime is higher than end datetime")
 
             if self._args.max_resolution is not None:
                 inventory = inventory[(pd.isnull(inventory['resolution'])) |

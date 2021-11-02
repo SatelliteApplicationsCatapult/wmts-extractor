@@ -82,7 +82,7 @@ class Downloader:
             tiles.extend(thread._tiles)
 
         # merge tiles into single image
-        gdal.Warp(out_pathname, tiles, options=gdal.WarpOptions(gdal.ParseCommandLine(args.options)))
+        gdal.Warp(out_pathname, tiles, options=gdal.WarpOptions(options=args.options, format=args.format))
 
         # remove tile files
         files = glob.glob(os.path.join(out_path, 'tile*'))
