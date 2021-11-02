@@ -180,16 +180,15 @@ class Extractor:
             inventory = inventory.sort_values(by='Weights', ascending=False).head(number_images)
 
         else:
-            if self._args.start_datetime < self._args.end_datetime:
+            if (self._args.start_datetime and self._args.end_datetime) and \
+                    self._args.start_datetime < self._args.end_datetime:
                 # apply start datetime condition
-                if self._args.start_datetime is not None:
-                    inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                          (inventory['acq_datetime'] >= self._args.start_datetime)]
+                inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
+                                      (inventory['acq_datetime'] >= self._args.start_datetime)]
 
                 # apply end datetime condition
-                if self._args.end_datetime is not None:
-                    inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
-                                          (inventory['acq_datetime'] <= self._args.end_datetime)]
+                inventory = inventory[(pd.isnull(inventory['acq_datetime'])) |
+                                      (inventory['acq_datetime'] <= self._args.end_datetime)]
             else:
                 print("WARNING: start datetime is higher than end datetime")
 
