@@ -1,8 +1,11 @@
+import nats
 import pandas as pd
 import geopandas as gpd
 import urllib3
 from .s3 import S3
 import folium
+import os
+import nats
 
 urllib3.disable_warnings()
 
@@ -120,3 +123,13 @@ def filter_tiles_by_pr_table(tiles, pr_table, number_images_per_period):
                                                                     ascending=False).head(number_images_per_period))
 
     return gpd.GeoDataFrame(pd.concat(filtered_pr_tiles, ignore_index=True))
+
+
+async def nats_publish(topic: str, message: str):
+    nats_host = os.environ.get("NATS_HOST", "localhost")
+
+    nc = await nats.connect(f"nats://{nats_host}:4222")
+
+    await nc.publish(topic, message.encode())
+
+    await nc.close()
