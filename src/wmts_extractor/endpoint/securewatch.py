@@ -113,7 +113,7 @@ class SecureWatch(Endpoint):
             out_path = os.path.join(out_path, record.acq_datetime.strftime('%Y%m%d_%H%M%S'))
 
         # construct unique filename
-        filename = '{name}_{date}_{zoom}_{distance}_{uid}.TIF'.format(name=aoi.name,
+        filename = '{name}_{date}_{zoom}_{distance}_{uid}.tif'.format(name=aoi.name,
                                                                       date=record.acq_datetime.strftime('%Y%m%d%H%M%S'),
                                                                       zoom=self._args.zoom,
                                                                       distance=aoi.distance,

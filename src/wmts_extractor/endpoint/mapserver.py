@@ -48,7 +48,7 @@ class MapServer(Endpoint):
         """
 
         # construct pathname
-        filename = '{name}_{zoom}_{distance}.TIF'.format(name=aoi.name,
+        filename = '{name}_{zoom}_{distance}.tif'.format(name=aoi.name,
                                                          zoom=self._args.zoom,
                                                          distance=aoi.distance)
 

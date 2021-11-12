@@ -1,0 +1,116 @@
+version: '3'
+
+services:
+  app-pgstac:
+    container_name: stac-fastapi-pgstac
+    image: satapps/stac-fastapi
+    platform: linux/amd64
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8082
+      - RELOAD=false
+      - ENVIRONMENT=local
+      - POSTGRES_USER=username
+      - POSTGRES_PASS=password
+      - POSTGRES_DBNAME=postgis
+      - POSTGRES_HOST_READER=database
+      - POSTGRES_HOST_WRITER=database
+      - POSTGRES_PORT=5432
+      - WEB_CONCURRENCY=10
+      - VSI_CACHE=TRUE
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+      - DB_MIN_CONN_SIZE=1
+      - DB_MAX_CONN_SIZE=1
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./scripts:/app/scripts
+    depends_on:
+      - database
+    command:
+      bash -c "./scripts/wait-for-it.sh database:5432 && python -m stac_fastapi.pgstac.app"
+
+  database:
+    container_name: stac-db
+    image: ghcr.io/stac-utils/pgstac:v0.3.4
+    environment:
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgis
+    ports:
+      - "5439:5432"
+    command: postgres -N 500
+
+  stac-ingester:
+    container_name: stac-ingester
+    image: satapps/pda-stac-ingester
+    environment:
+      - NATS_HOST=nats
+      - S3_ENDPOINT=https://s3-uk-1.sa-catapult.co.uk
+      - S3_BUCKET=public-eo-data
+      - API_HOST=app-pgstac
+      - API_PORT=8082
+    volumes:
+      - ./scripts:/app/scripts
+    command:
+      - "/app/scripts/wait-for-it.sh"
+      - "app-pgstac:8082"
+      - "--"
+      - "python"
+      -  "/src/stac_ingester/nats_consumer.py"
+    depends_on:
+      - database
+      - app-pgstac
+
+  stac-creator:
+    container_name: stac-creator
+    image: satapps/pda-stac-creator
+    environment:
+      - NATS_HOST=nats
+      - S3_ENDPOINT=https://s3-uk-1.sa-catapult.co.uk
+      - S3_BUCKET=public-eo-data
+      - S3_SECRET_ACCESS_KEY=secret
+      - S3_ACCESS_KEY_ID=secret
+      - S3_STAC_KEY=stac_catalogs/pda_stac
+    volumes:
+      - ./scripts:/app/scripts
+    command:
+      - "/app/scripts/wait-for-it.sh"
+      - "nats:4222"
+      - "--"
+      - "python"
+      -  "/src/sac_stac/entrypoints/nats_eventconsumer.py"
+    depends_on:
+      - stac-ingester
+      - nats
+
+  wmts-extractor-lab:
+    container_name: wmts-extractor-lab
+    build:
+      context: .
+      dockerfile: Dockerfile_jupyterlab
+    environment:
+      - NATS_HOST=nats
+      - S3_ENDPOINT=https://s3-uk-1.sa-catapult.co.uk
+      - S3_BUCKET=public-eo-data
+      - AWS_SECRET_ACCESS_KEY=secret
+      - AWS_ACCESS_KEY_ID=secret
+    volumes:
+      - ./src:/src
+      - ./scripts:/app/scripts
+    ports:
+      - "8888:8888"
+    depends_on:
+      - stac-creator
+      - nats
+
+  nats:
+    container_name: nats
+    image: nats:alpine
+    ports:
+      - "4222:4222"
+
+networks:
+  default:
+    name: stac-fastapi-network

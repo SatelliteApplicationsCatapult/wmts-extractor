@@ -88,7 +88,7 @@ class SentinelHub(Endpoint):
 
         # construct unique filename
         out_path = os.path.join(aoi.name, record.acq_datetime.strftime('%Y%m%d_%H%M%S'))
-        filename = '{name}_{date}_{zoom}_{distance}_{layer}_{cell}.TIF'.format(name=aoi.name,
+        filename = '{name}_{date}_{zoom}_{distance}_{layer}_{cell}.tif'.format(name=aoi.name,
                                                                                date=record.acq_datetime.strftime(
                                                                                    '%Y%m%d%H%M%S'),
                                                                                zoom=self._args.zoom,

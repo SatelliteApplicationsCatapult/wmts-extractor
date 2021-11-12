@@ -1,3 +1,4 @@
+import asyncio
 import os
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from progress.bar import Bar
 from .endpoint.mapserver import MapServer
 from .endpoint.sentinelhub import SentinelHub
 from .endpoint.securewatch import SecureWatch
-from .utils import obtain_decision_table, upload_to_s3
+from .utils import obtain_decision_table, upload_to_s3, nats_publish
 
 endpoint_class = {
     "mapserver": MapServer,
@@ -227,5 +228,7 @@ class Extractor:
             print(f"Pushing tile to {s3_endpoint}/{s3_bucket}/{key}")
             if upload_to_s3(file, s3_endpoint, s3_bucket, s3_key_id, s3_access_key, key) == 200:
                 Path(file).unlink()  # Remove file
+                loop = asyncio.get_running_loop()
+                loop.create_task(nats_publish(topic="stac_creator.item", message=key))
 
         shutil.rmtree(f"{self._args.out_path}/{self._config.endpoint.name}")
